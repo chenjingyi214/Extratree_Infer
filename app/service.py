@@ -30,14 +30,20 @@ def get_model() -> Any:
     if _MODEL is None:
         if not MODEL_PATH.exists():
             raise RuntimeError(f"模型文件不存在: {MODEL_PATH}")
-        _MODEL = joblib.load(MODEL_PATH)
+        try:
+            _MODEL = joblib.load(MODEL_PATH)
+        except Exception as exc:
+            raise RuntimeError(f"模型文件加载失败: {MODEL_PATH}") from exc
     return _MODEL
 
 
 def get_feature_names() -> list[str]:
     global _FEATURE_NAMES
     if _FEATURE_NAMES is None:
-        _FEATURE_NAMES = infer.load_feature_names(FEATURE_LIST_PATH)
+        try:
+            _FEATURE_NAMES = infer.load_feature_names(FEATURE_LIST_PATH)
+        except Exception as exc:
+            raise RuntimeError(f"特征列表加载失败: {FEATURE_LIST_PATH}") from exc
     return _FEATURE_NAMES
 
 

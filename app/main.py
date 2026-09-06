@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import tempfile
 from pathlib import Path
 
@@ -43,10 +42,12 @@ def _run_or_400(func, *args):
         return func(*args)
     except HTTPException:
         raise
-    except (ValueError, FileNotFoundError, OSError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail="模型加载失败，请联系管理员") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (FileNotFoundError, OSError) as exc:
+        raise HTTPException(status_code=500, detail="服务内部错误，请联系管理员") from exc
 
 
 @app.post("/api/predict")
