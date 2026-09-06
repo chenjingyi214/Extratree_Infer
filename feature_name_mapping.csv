@@ -1,0 +1,59 @@
+feature_name,original_name,feature_category,source_column,encoding_rule,description_zh
+age,年龄,demographic,Age / age,numeric age in years,患者年龄
+gender_male,性别,demographic,Gender / gender,"male=1, female=0",患者是否为男性
+symptom_fatigue,乏力,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在乏力
+symptom_low_grade_fever,低热,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在低热
+symptom_dyspnea,呼吸困难,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在呼吸困难
+symptom_cough,咳嗽,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在咳嗽
+symptom_sputum_production,咳痰,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在咳痰
+symptom_sneezing,喷嚏,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在喷嚏
+symptom_dizziness_or_headache,头晕/疼,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在头晕/疼
+symptom_air_hunger,憋气,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在憋气
+symptom_shortness_of_breath,气短,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在气短
+symptom_rhinorrhea,流涕,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在流涕
+symptom_chest_pain,胸痛,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在胸痛
+symptom_nasal_congestion,鼻塞,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在鼻塞
+symptom_confusion_or_somnolence,意识模糊/嗜睡,symptom,查体结果,"positive=1, negative or blank=0; missing symptom rows=0",是否存在意识模糊/嗜睡
+symptom_system_respiratory,呼吸系统症状,symptom_system,derived from symptom features,maximum of member symptom indicators,是否存在任一呼吸系统症状
+symptom_system_upper_airway,上气道症状,symptom_system,derived from symptom features,maximum of member symptom indicators,是否存在任一上气道症状
+symptom_system_systemic,全身症状,symptom_system,derived from symptom features,maximum of member symptom indicators,是否存在任一全身症状
+lab_measured_c_reactive_protein,C反应蛋白,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量C反应蛋白
+lab_value_c_reactive_protein,C反应蛋白,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,C反应蛋白标准化数值结果
+lab_normalized_c_reactive_protein,C反应蛋白,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,C反应蛋白参考区间归一化结果
+lab_measured_hematocrit,红细胞比容,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量红细胞比容
+lab_value_hematocrit,红细胞比容,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,红细胞比容标准化数值结果
+lab_normalized_hematocrit,红细胞比容,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,红细胞比容参考区间归一化结果
+lab_measured_lymphocyte_count,淋巴细胞计数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量淋巴细胞计数
+lab_value_lymphocyte_count,淋巴细胞计数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,淋巴细胞计数标准化数值结果
+lab_normalized_lymphocyte_count,淋巴细胞计数,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,淋巴细胞计数参考区间归一化结果
+lab_measured_monocyte_count,单核细胞计数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量单核细胞计数
+lab_value_monocyte_count,单核细胞计数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,单核细胞计数标准化数值结果
+lab_normalized_monocyte_count,单核细胞计数,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,单核细胞计数参考区间归一化结果
+lab_measured_monocyte_to_lymphocyte_ratio,单核细胞/淋巴细胞比值,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量单核细胞/淋巴细胞比值
+lab_value_monocyte_to_lymphocyte_ratio,单核细胞/淋巴细胞比值,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,单核细胞/淋巴细胞比值标准化数值结果
+lab_measured_mycoplasma_pneumoniae_igm_antibody,肺炎支原体抗体.IgM,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量肺炎支原体抗体.IgM
+lab_value_mycoplasma_pneumoniae_igm_antibody,肺炎支原体抗体.IgM,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,肺炎支原体抗体.IgM标准化数值结果
+lab_positive_mycoplasma_pneumoniae_igm_antibody,肺炎支原体抗体.IgM,lab_positive,standardResultNorm / abnormal,"positive=1, negative=0, unmeasured=missing",肺炎支原体抗体.IgM定性结果是否阳性
+lab_measured_neutrophil_count,中性粒细胞计数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量中性粒细胞计数
+lab_value_neutrophil_count,中性粒细胞计数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,中性粒细胞计数标准化数值结果
+lab_normalized_neutrophil_count,中性粒细胞计数,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,中性粒细胞计数参考区间归一化结果
+lab_measured_neutrophil_to_lymphocyte_ratio,中性粒细胞/淋巴细胞比值,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量中性粒细胞/淋巴细胞比值
+lab_value_neutrophil_to_lymphocyte_ratio,中性粒细胞/淋巴细胞比值,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,中性粒细胞/淋巴细胞比值标准化数值结果
+lab_measured_platelet_count,血小板计数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量血小板计数
+lab_value_platelet_count,血小板计数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,血小板计数标准化数值结果
+lab_normalized_platelet_count,血小板计数,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,血小板计数参考区间归一化结果
+lab_measured_platelet_distribution_width,血小板分布宽度,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量血小板分布宽度
+lab_value_platelet_distribution_width,血小板分布宽度,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,血小板分布宽度标准化数值结果
+lab_normalized_platelet_distribution_width,血小板分布宽度,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,血小板分布宽度参考区间归一化结果
+lab_measured_platelet_to_lymphocyte_ratio,血小板/淋巴细胞比值,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量血小板/淋巴细胞比值
+lab_value_platelet_to_lymphocyte_ratio,血小板/淋巴细胞比值,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,血小板/淋巴细胞比值标准化数值结果
+lab_measured_serum_amyloid_a,淀粉样蛋白A,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量淀粉样蛋白A
+lab_value_serum_amyloid_a,淀粉样蛋白A,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,淀粉样蛋白A标准化数值结果
+lab_normalized_serum_amyloid_a,淀粉样蛋白A,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,淀粉样蛋白A参考区间归一化结果
+lab_measured_systemic_immune_inflammation_index,系统性免疫炎症指数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量系统性免疫炎症指数
+lab_value_systemic_immune_inflammation_index,系统性免疫炎症指数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,系统性免疫炎症指数标准化数值结果
+lab_measured_systemic_inflammation_response_index,系统性炎症反应指数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量系统性炎症反应指数
+lab_value_systemic_inflammation_response_index,系统性炎症反应指数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,系统性炎症反应指数标准化数值结果
+lab_measured_white_blood_cell_count,白细胞计数,lab_measured,laboratoryName,"laboratory record present=1, absent=0",是否测量白细胞计数
+lab_value_white_blood_cell_count,白细胞计数,lab_value,standardResultNorm -> standardResult,numeric standardResultNorm; numeric standardResult fallback,白细胞计数标准化数值结果
+lab_normalized_white_blood_cell_count,白细胞计数,lab_normalized,standardNormalizedQuantitative,reference-interval normalized quantitative value,白细胞计数参考区间归一化结果
