@@ -17,6 +17,42 @@
 | `test_cases_raw_labs.csv` | 同两位患者的原始检验记录 |
 | `test_cases_reference.csv` | 样例来源、真实标签和预期得分，仅用于核对 |
 | `requirements.txt` | 与当前权重兼容的 Python 依赖版本 |
+| `app/` | FastAPI 后端 + 问卷式单页前端（Web 界面，见"快速开始"） |
+| `tests/` | Web API 的 pytest 测试 |
+
+## 快速开始（Web 界面）
+
+需要 64 位 Python 3.11。推荐使用 [uv](https://docs.astral.sh/uv/) 创建环境：
+
+```bash
+cd Extratree_infer
+uv venv --python 3.11 .venv
+UV_HTTP_TIMEOUT=180 uv pip install --python .venv/bin/python -r requirements.txt
+```
+
+（也可以按第 1 节用标准 venv + pip 安装；依赖版本必须固定，否则模型权重可能无法加载或结果漂移。）
+
+启动服务：
+
+```bash
+.venv/bin/uvicorn app.main:app --port 8000
+```
+
+浏览器打开 **http://127.0.0.1:8000**，在问卷表单中填写患者信息并提交：
+
+- **必填**：年龄、性别
+- **选填**：13 项症状（默认"无"）、15 项检验（没测留空即可，由模型内置规则填补）
+- 「示例·肺炎患者 / 示例·上感患者」按钮可一键填入样例数据后提交
+
+停止服务：在终端按 `Ctrl+C`。
+
+运行测试（可选）：
+
+```bash
+.venv/bin/python -m pytest tests/ -q
+```
+
+第 1–6 节为命令行（CLI）用法与数据格式说明，Web 界面不影响这些既有功能。
 
 数据流如下：
 
