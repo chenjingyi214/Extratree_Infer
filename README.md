@@ -260,3 +260,15 @@ threshold,predicted_label,predicted_class
 - `joblib.load` 会反序列化 Python 对象，只应加载可信的 `extra_trees_sqrt_logloss.joblib`。
 - ExtraTrees 输出没有做概率校准；`pneumonia_score=0.8` 不应直接解释为“80% 患病概率”。
 - 本包不负责从医院原始单位和参考区间重新清洗检验结果，也不包含重新训练、模型校准、临床决策支持或数据脱敏流程。
+
+## 7. Web 界面（可选）
+
+安装依赖后启动本地服务：
+
+```bash
+.venv/bin/uvicorn app.main:app --port 8000
+```
+
+浏览器打开 http://127.0.0.1:8000 即可上传症状/检验 CSV 并查看每位患者的得分与特征详情；
+"载入示例数据"按钮使用内置样例并展示输入 CSV 的格式预览。Web 层只调用
+`preprocessing.py` 与 `infer.py` 的既有逻辑，不改变模型行为。
