@@ -217,3 +217,5 @@ els.exportBtn.addEventListener('click', exportCsv);
 els.scoreSort.addEventListener('click', () => { sortAsc = !sortAsc; sortAndRenderRows(); });
 els.drawerClose.addEventListener('click', () => { els.drawer.hidden = true; });
 els.drawer.addEventListener('click', (event) => { if (event.target === els.drawer) els.drawer.hidden = true; });
+
+if (new URLSearchParams(location.search).has('demo')) runDemo();
