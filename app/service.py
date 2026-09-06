@@ -15,11 +15,12 @@ import preprocessing
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = ROOT / "extra_trees_sqrt_logloss.joblib"
 FEATURE_LIST_PATH = ROOT / "feature_list.json"
-DEMO_SYMPTOMS_PATH = ROOT / "test_cases_raw_symptoms.csv"
-DEMO_LABS_PATH = ROOT / "test_cases_raw_labs.csv"
 
 SYMPTOM_EN_TO_ZH = {en: zh for zh, en in preprocessing.SYMPTOM_NAME_MAP.items()}
 LAB_EN_TO_ZH = {en: zh for zh, en in preprocessing.LAB_NAME_MAP.items()}
+
+FORM_PATIENT_ID = "FORM-1"
+QUALITATIVE_LAB = "肺炎支原体抗体.IgM"
 
 _MODEL: Any = None
 _FEATURE_NAMES: list[str] | None = None
@@ -116,14 +117,111 @@ def run_prediction(
     return {"patients": patients}
 
 
-def csv_preview(path: Path, max_rows: int = 5) -> dict[str, Any]:
-    frame = pd.read_csv(path, encoding="utf-8-sig", nrows=max_rows)
-    rows = frame.astype(object).where(frame.notna(), None).values.tolist()
-    return {"columns": [str(c) for c in frame.columns], "rows": rows}
+def _form_age_gender(payload: dict) -> tuple[float, str]:
+    try:
+        age = float(payload.get("age"))
+    except (TypeError, ValueError):
+        raise ValueError("年龄必填且必须为数值") from None
+    if not 0 < age <= 150:
+        raise ValueError("年龄必须在 0 到 150 之间")
+    gender = payload.get("gender")
+    if gender not in {"男", "女"}:
+        raise ValueError("性别必填（男/女）")
+    return age, gender
 
 
-def run_demo(threshold: float | None) -> dict[str, Any]:
-    result = run_prediction(DEMO_SYMPTOMS_PATH, DEMO_LABS_PATH, threshold)
-    result["symptoms_preview"] = csv_preview(DEMO_SYMPTOMS_PATH)
-    result["labs_preview"] = csv_preview(DEMO_LABS_PATH)
-    return result
+def build_form_tables(payload: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Validate the questionnaire JSON and rebuild the raw long tables from it."""
+    if not isinstance(payload, dict):
+        raise ValueError("请求格式不正确")
+    age, gender = _form_age_gender(payload)
+
+    symptoms = payload.get("symptoms") or {}
+    if not isinstance(symptoms, dict):
+        raise ValueError("症状字段格式不正确")
+    unknown_symptoms = sorted(set(symptoms) - set(preprocessing.SYMPTOM_NAME_MAP))
+    if unknown_symptoms:
+        raise ValueError(f"未登记的症状名称: {unknown_symptoms}")
+
+    labs = payload.get("labs") or {}
+    if not isinstance(labs, dict):
+        raise ValueError("检验字段格式不正确")
+    unknown_labs = sorted(set(labs) - set(preprocessing.LAB_NAME_MAP))
+    if unknown_labs:
+        raise ValueError(f"未登记的检验项目: {unknown_labs}")
+
+    symptom_table = pd.DataFrame(
+        [
+            {
+                "PatientID": FORM_PATIENT_ID,
+                "Gender": gender,
+                "Age": age,
+                "症状与体征-中文": name,
+                "查体结果": "是" if symptoms.get(name) else "否",
+            }
+            for name in preprocessing.SYMPTOM_NAME_MAP
+        ]
+    )
+
+    lab_rows = []
+    for name, value in labs.items():
+        row = {
+            "patientId": FORM_PATIENT_ID,
+            "gender": gender,
+            "age": age,
+            "resultDateTime": "",
+            "reportDateTime": "",
+            "laboratoryName": name,
+            "standardResult": "",
+            "standardResultNorm": "",
+            "standardNormalizedQuantitative": "",
+            "abnormal": "",
+            "standardResultType": "",
+        }
+        if name == QUALITATIVE_LAB:
+            if value not in {"阳性", "阴性"}:
+                raise ValueError(f"{QUALITATIVE_LAB} 只能填 阳性/阴性")
+            row["standardResult"] = value
+            row["standardResultNorm"] = value
+            row["standardResultType"] = "QUALITATIVE"
+        else:
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                raise ValueError(f"检验项目 {name} 的结果必须是数值") from None
+            row["standardResult"] = number
+            row["standardResultNorm"] = number
+            row["standardResultType"] = "QUANTIFY"
+        lab_rows.append(row)
+
+    if not lab_rows:
+        # preprocessing requires a non-empty lab file; a placeholder row with an
+        # unrecognized item name is ignored by the feature builder.
+        lab_rows.append(
+            {
+                "patientId": FORM_PATIENT_ID,
+                "gender": gender,
+                "age": age,
+                "resultDateTime": "",
+                "reportDateTime": "",
+                "laboratoryName": "",
+                "standardResult": "",
+                "standardResultNorm": "",
+                "standardNormalizedQuantitative": "",
+                "abnormal": "",
+                "standardResultType": "",
+            }
+        )
+    lab_table = pd.DataFrame(lab_rows)
+    return symptom_table, lab_table
+
+
+def run_form_prediction(payload: dict, threshold: float | None) -> dict[str, Any]:
+    symptom_table, lab_table = build_form_tables(payload)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        symptom_path = tmp / "symptoms.csv"
+        lab_path = tmp / "labs.csv"
+        symptom_table.to_csv(symptom_path, index=False, encoding="utf-8-sig")
+        lab_table.to_csv(lab_path, index=False, encoding="utf-8-sig")
+        return run_prediction(symptom_path, lab_path, threshold)

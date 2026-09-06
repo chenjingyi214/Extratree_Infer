@@ -1,88 +1,112 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 
-ROOT = Path(__file__).resolve().parent.parent
 client = TestClient(app)
 
+# 表单路径只填检验原始值（归一化值留空由模型填补），基准得分与 CSV 路径不同，
+# 以下为实测值（详见 README 第 7 节）。
+EXAMPLE_FY13 = {
+    "age": 91,
+    "gender": "女",
+    "symptoms": {
+        "乏力": True, "低热": True, "呼吸困难": True, "咳嗽": True,
+        "头晕/疼": True, "憋气": True, "气短": True, "意识模糊/嗜睡": True,
+    },
+    "labs": {
+        "白细胞计数": 6.93, "红细胞比容": 35.4, "淋巴细胞计数": 1.3,
+        "单核细胞计数": 0.43, "中性粒细胞计数": 5.06, "血小板分布宽度": 10.8,
+        "血小板计数": 137, "淀粉样蛋白A": 11.273, "C反应蛋白": 2.2,
+        "中性粒细胞/淋巴细胞比值": 3.89230769230769,
+        "单核细胞/淋巴细胞比值": 0.330769230769231,
+        "血小板/淋巴细胞比值": 105.384615384615,
+        "系统性免疫炎症指数": 533.246153846154,
+        "系统性炎症反应指数": 1.67369230769231,
+    },
+}
 
-def _upload_files():
-    return {
-        "symptom_file": (
-            "test_cases_raw_symptoms.csv",
-            (ROOT / "test_cases_raw_symptoms.csv").read_bytes(),
-            "text/csv",
-        ),
-        "lab_file": (
-            "test_cases_raw_labs.csv",
-            (ROOT / "test_cases_raw_labs.csv").read_bytes(),
-            "text/csv",
-        ),
-    }
+EXAMPLE_SG106 = {
+    "age": 68,
+    "gender": "男",
+    "symptoms": {},
+    "labs": {
+        "白细胞计数": 11.46, "红细胞比容": 38.2, "淋巴细胞计数": 2.5,
+        "单核细胞计数": 0.56, "中性粒细胞计数": 8.19, "血小板分布宽度": 16.8,
+        "血小板计数": 215, "淀粉样蛋白A": 38.333, "C反应蛋白": 14.0,
+        "中性粒细胞/淋巴细胞比值": 3.276, "单核细胞/淋巴细胞比值": 0.224,
+        "血小板/淋巴细胞比值": 86, "系统性免疫炎症指数": 704.34,
+        "系统性炎症反应指数": 1.83456, "肺炎支原体抗体.IgM": "阴性",
+    },
+}
 
 
-def test_demo_returns_reference_scores():
-    resp = client.post("/api/predict/demo", params={"threshold": 0.16})
+def _single(result_json):
+    patients = result_json["patients"]
+    assert len(patients) == 1
+    return patients[0]
+
+
+def test_form_example_pneumonia_patient():
+    resp = client.post("/api/predict/form", json=EXAMPLE_FY13, params={"threshold": 0.16})
     assert resp.status_code == 200
-    data = resp.json()
-    scores = {p["patient_id"]: p["score"] for p in data["patients"]}
-    assert scores["KJSQ-FY-13"] == pytest.approx(0.80375, abs=1e-6)
-    assert scores["KJSQ-SG-106"] == pytest.approx(0.035625, abs=1e-6)
-    labels = {p["patient_id"]: p["label"] for p in data["patients"]}
-    assert labels == {"KJSQ-FY-13": "肺炎", "KJSQ-SG-106": "上感"}
-    assert "PatientID" in data["symptoms_preview"]["columns"]
-    assert "patientId" in data["labs_preview"]["columns"]
-    assert len(data["symptoms_preview"]["rows"]) <= 5
-    detail = next(p for p in data["patients"] if p["patient_id"] == "KJSQ-FY-13")["detail"]
-    assert detail["age"] == 91.0
-    assert detail["gender"] == "女"
-    measured = {lab["name"]: lab["measured"] for lab in detail["labs"]}
+    patient = _single(resp.json())
+    assert patient["score"] == pytest.approx(0.7125, abs=1e-6)
+    assert patient["label"] == "肺炎"
+    assert patient["detail"]["age"] == 91.0
+    assert patient["detail"]["gender"] == "女"
+    assert set(patient["detail"]["symptoms_positive"]) == set(EXAMPLE_FY13["symptoms"])
+    measured = {lab["name"]: lab["measured"] for lab in patient["detail"]["labs"]}
     assert measured["白细胞计数"] is True
+    assert measured["肺炎支原体抗体.IgM"] is False
 
 
-def test_demo_without_threshold_has_null_labels():
-    resp = client.post("/api/predict/demo")
+def test_form_example_uri_patient():
+    resp = client.post("/api/predict/form", json=EXAMPLE_SG106, params={"threshold": 0.16})
     assert resp.status_code == 200
-    assert all(p["label"] is None for p in resp.json()["patients"])
+    patient = _single(resp.json())
+    assert patient["score"] == pytest.approx(0.155, abs=1e-6)
+    assert patient["label"] == "上感"
+    igm = next(lab for lab in patient["detail"]["labs"] if lab["name"] == "肺炎支原体抗体.IgM")
+    assert igm["measured"] is True
+    assert igm["positive"] is False
 
 
-def test_predict_upload_matches_reference():
-    resp = client.post("/api/predict", files=_upload_files(), params={"threshold": 0.16})
+def test_form_minimal_payload_only_age_and_gender():
+    resp = client.post("/api/predict/form", json={"age": 50, "gender": "男"}, params={"threshold": 0.16})
     assert resp.status_code == 200
-    scores = {p["patient_id"]: p["score"] for p in resp.json()["patients"]}
-    assert scores["KJSQ-FY-13"] == pytest.approx(0.80375, abs=1e-6)
-    assert scores["KJSQ-SG-106"] == pytest.approx(0.035625, abs=1e-6)
+    patient = _single(resp.json())
+    assert patient["label"] == "上感"
+    assert patient["detail"]["symptoms_positive"] == []
+    assert all(lab["measured"] is False for lab in patient["detail"]["labs"])
 
 
-def test_predict_rejects_non_csv():
-    files = {
-        "symptom_file": ("notes.txt", b"hello", "text/plain"),
-        "lab_file": ("labs.csv", b"a,b\n1,2\n", "text/csv"),
-    }
-    resp = client.post("/api/predict", files=files)
-    assert resp.status_code == 400
-
-
-def test_predict_rejects_missing_columns():
-    files = {
-        "symptom_file": ("symptoms.csv", b"foo,bar\n1,2\n", "text/csv"),
-        "lab_file": ("labs.csv", b"foo,bar\n1,2\n", "text/csv"),
-    }
-    resp = client.post("/api/predict", files=files)
-    assert resp.status_code == 400
-    assert "缺少必要字段" in resp.json()["detail"]
-
-
-def test_predict_rejects_out_of_range_threshold():
-    resp = client.post("/api/predict", files=_upload_files(), params={"threshold": 1.5})
-    assert resp.status_code == 400
-
-
-def test_demo_file_download():
-    resp = client.get("/api/demo/files/symptoms")
+def test_form_without_threshold_has_null_label():
+    resp = client.post("/api/predict/form", json={"age": 50, "gender": "男"})
     assert resp.status_code == 200
-    assert "PatientID" in resp.text
-    assert client.get("/api/demo/files/nope").status_code == 404
+    assert _single(resp.json())["label"] is None
+
+
+@pytest.mark.parametrize(
+    "payload, message",
+    [
+        ({"gender": "男"}, "年龄必填"),
+        ({"age": "abc", "gender": "男"}, "年龄必填"),
+        ({"age": 0, "gender": "男"}, "0 到 150"),
+        ({"age": 50}, "性别必填"),
+        ({"age": 50, "gender": "未知"}, "性别必填"),
+        ({"age": 50, "gender": "男", "symptoms": {"打呼": True}}, "未登记的症状名称"),
+        ({"age": 50, "gender": "男", "labs": {"血糖": 5.0}}, "未登记的检验项目"),
+        ({"age": 50, "gender": "男", "labs": {"白细胞计数": "很多"}}, "必须是数值"),
+        ({"age": 50, "gender": "男", "labs": {"肺炎支原体抗体.IgM": "不确定"}}, "阳性/阴性"),
+    ],
+)
+def test_form_validation_errors(payload, message):
+    resp = client.post("/api/predict/form", json=payload)
+    assert resp.status_code == 400
+    assert message in resp.json()["detail"]
+
+
+def test_form_rejects_out_of_range_threshold():
+    resp = client.post("/api/predict/form", json={"age": 50, "gender": "男"}, params={"threshold": 1.5})
+    assert resp.status_code == 400

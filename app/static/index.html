@@ -13,78 +13,52 @@
   </header>
 
   <main>
-    <section class="card" id="input-card">
-      <h2>1. 上传原始数据</h2>
-      <div class="upload-row">
-        <div class="dropzone" id="symptom-zone">
-          <input type="file" id="symptom-file" accept=".csv" hidden />
-          <span class="dropzone-icon">📄</span>
-          <span class="dropzone-label">症状长表 CSV</span>
-          <span class="dropzone-file" id="symptom-name">点击选择或拖入文件</span>
+    <form class="card" id="patient-form" novalidate>
+      <section class="form-section">
+        <h2>1. 基本信息 <span class="tag tag-required">必填</span></h2>
+        <div class="basic-grid">
+          <label class="field">
+            <span class="field-label">年龄 <i class="req">*</i></span>
+            <input type="number" id="age" min="1" max="150" step="1" placeholder="岁" />
+          </label>
+          <fieldset class="field">
+            <span class="field-label">性别 <i class="req">*</i></span>
+            <div class="seg" id="gender-seg">
+              <button type="button" class="seg-btn" data-value="男">男</button>
+              <button type="button" class="seg-btn" data-value="女">女</button>
+            </div>
+          </fieldset>
         </div>
-        <div class="dropzone" id="lab-zone">
-          <input type="file" id="lab-file" accept=".csv" hidden />
-          <span class="dropzone-icon">🧪</span>
-          <span class="dropzone-label">检验长表 CSV</span>
-          <span class="dropzone-file" id="lab-name">点击选择或拖入文件</span>
-        </div>
-      </div>
+      </section>
+
+      <section class="form-section">
+        <h2>2. 症状与体征 <span class="tag tag-optional">选填 · 默认为「无」</span></h2>
+        <div class="symptom-list" id="symptom-list"></div>
+      </section>
+
+      <section class="form-section">
+        <h2>3. 检验项目 <span class="tag tag-optional">选填 · 没测的项目留空即可</span></h2>
+        <div class="lab-grid" id="lab-grid"></div>
+      </section>
+
       <div class="controls">
         <label class="threshold-field">
           分类阈值
           <input type="number" id="threshold" min="0" max="1" step="0.01" value="0.16" />
         </label>
-        <button id="analyze-btn" class="btn btn-primary" type="button">开始分析</button>
-        <button id="demo-btn" class="btn btn-ghost" type="button">载入示例数据</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">提交评分</button>
+        <button type="button" class="btn btn-ghost" id="demo-fy">示例·肺炎患者</button>
+        <button type="button" class="btn btn-ghost" id="demo-sg">示例·上感患者</button>
+        <button type="button" class="btn btn-ghost" id="reset-btn">清空</button>
       </div>
       <p id="error-box" class="error-box" hidden></p>
-    </section>
+    </form>
 
-    <section class="card" id="preview-section" hidden>
-      <h2>示例数据格式预览（前 5 行）</h2>
-      <div class="preview-grid">
-        <div>
-          <div class="preview-title">
-            <h3>症状长表</h3>
-            <a href="/api/demo/files/symptoms" download>下载 CSV</a>
-          </div>
-          <div class="table-scroll"><table id="symptoms-preview"></table></div>
-        </div>
-        <div>
-          <div class="preview-title">
-            <h3>检验长表</h3>
-            <a href="/api/demo/files/labs" download>下载 CSV</a>
-          </div>
-          <div class="table-scroll"><table id="labs-preview"></table></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card" id="results-section" hidden>
-      <div class="results-header">
-        <h2>2. 推理结果</h2>
-        <button id="export-btn" class="btn btn-ghost" type="button">导出预测 CSV</button>
-      </div>
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>患者 ID</th>
-            <th class="sortable" id="score-sort">得分 ↓</th>
-            <th>判断</th>
-          </tr>
-        </thead>
-        <tbody id="results-body"></tbody>
-      </table>
-      <p class="hint">点击任意行查看患者特征详情</p>
+    <section class="card" id="result-section" hidden>
+      <h2>评分结果</h2>
+      <div id="result-content"></div>
     </section>
   </main>
-
-  <aside id="drawer" class="drawer" hidden>
-    <div class="drawer-panel">
-      <button id="drawer-close" class="drawer-close" type="button">×</button>
-      <div id="drawer-content"></div>
-    </div>
-  </aside>
 
   <footer class="site-footer">
     模型得分为未经校准的输出分数，不能解释为患病概率，也不能替代医生诊断。

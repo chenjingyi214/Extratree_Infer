@@ -1,57 +1,147 @@
-const els = {
-  symptomFile: document.getElementById('symptom-file'),
-  labFile: document.getElementById('lab-file'),
-  symptomName: document.getElementById('symptom-name'),
-  labName: document.getElementById('lab-name'),
-  threshold: document.getElementById('threshold'),
-  analyzeBtn: document.getElementById('analyze-btn'),
-  demoBtn: document.getElementById('demo-btn'),
-  errorBox: document.getElementById('error-box'),
-  previewSection: document.getElementById('preview-section'),
-  symptomsPreview: document.getElementById('symptoms-preview'),
-  labsPreview: document.getElementById('labs-preview'),
-  resultsSection: document.getElementById('results-section'),
-  resultsBody: document.getElementById('results-body'),
-  scoreSort: document.getElementById('score-sort'),
-  exportBtn: document.getElementById('export-btn'),
-  drawer: document.getElementById('drawer'),
-  drawerClose: document.getElementById('drawer-close'),
-  drawerContent: document.getElementById('drawer-content'),
+const SYMPTOMS = [
+  '乏力', '低热', '呼吸困难', '咳嗽', '咳痰', '喷嚏', '头晕/疼',
+  '憋气', '气短', '流涕', '胸痛', '鼻塞', '意识模糊/嗜睡',
+];
+
+const QUANT_LABS = [
+  'C反应蛋白', '红细胞比容', '淋巴细胞计数', '单核细胞计数',
+  '单核细胞/淋巴细胞比值', '中性粒细胞计数', '中性粒细胞/淋巴细胞比值',
+  '血小板计数', '血小板分布宽度', '血小板/淋巴细胞比值',
+  '淀粉样蛋白A', '系统性免疫炎症指数', '系统性炎症反应指数', '白细胞计数',
+];
+const QUAL_LAB = '肺炎支原体抗体.IgM';
+
+const DEMO_FY13 = {
+  age: 91,
+  gender: '女',
+  symptoms: ['乏力', '低热', '呼吸困难', '咳嗽', '头晕/疼', '憋气', '气短', '意识模糊/嗜睡'],
+  labs: {
+    '白细胞计数': 6.93, '红细胞比容': 35.4, '淋巴细胞计数': 1.3,
+    '单核细胞计数': 0.43, '中性粒细胞计数': 5.06, '血小板分布宽度': 10.8,
+    '血小板计数': 137, '淀粉样蛋白A': 11.273, 'C反应蛋白': 2.2,
+    '中性粒细胞/淋巴细胞比值': 3.89230769230769,
+    '单核细胞/淋巴细胞比值': 0.330769230769231,
+    '血小板/淋巴细胞比值': 105.384615384615,
+    '系统性免疫炎症指数': 533.246153846154,
+    '系统性炎症反应指数': 1.67369230769231,
+  },
+  qualLab: '',
 };
 
-let lastPatients = [];
-let sortAsc = false;
+const DEMO_SG106 = {
+  age: 68,
+  gender: '男',
+  symptoms: [],
+  labs: {
+    '白细胞计数': 11.46, '红细胞比容': 38.2, '淋巴细胞计数': 2.5,
+    '单核细胞计数': 0.56, '中性粒细胞计数': 8.19, '血小板分布宽度': 16.8,
+    '血小板计数': 215, '淀粉样蛋白A': 38.333, 'C反应蛋白': 14.0,
+    '中性粒细胞/淋巴细胞比值': 3.276, '单核细胞/淋巴细胞比值': 0.224,
+    '血小板/淋巴细胞比值': 86, '系统性免疫炎症指数': 704.34,
+    '系统性炎症反应指数': 1.83456,
+  },
+  qualLab: '阴性',
+};
+
+const els = {
+  form: document.getElementById('patient-form'),
+  age: document.getElementById('age'),
+  genderSeg: document.getElementById('gender-seg'),
+  symptomList: document.getElementById('symptom-list'),
+  labGrid: document.getElementById('lab-grid'),
+  threshold: document.getElementById('threshold'),
+  submitBtn: document.getElementById('submit-btn'),
+  demoFy: document.getElementById('demo-fy'),
+  demoSg: document.getElementById('demo-sg'),
+  resetBtn: document.getElementById('reset-btn'),
+  errorBox: document.getElementById('error-box'),
+  resultSection: document.getElementById('result-section'),
+  resultContent: document.getElementById('result-content'),
+};
 
 function showError(message) {
+  els.errorBox.classList.remove('info-box');
   els.errorBox.textContent = message || '';
   els.errorBox.hidden = !message;
 }
 
 function setBusy(busy) {
-  els.analyzeBtn.disabled = busy;
-  els.demoBtn.disabled = busy;
-  els.analyzeBtn.textContent = busy ? '分析中…' : '开始分析';
+  els.submitBtn.disabled = busy;
+  els.submitBtn.textContent = busy ? '评分中…' : '提交评分';
 }
 
-function setupDropzone(zoneId, input, nameEl) {
-  const zone = document.getElementById(zoneId);
-  zone.addEventListener('click', () => input.click());
-  input.addEventListener('change', () => {
-    nameEl.textContent = input.files[0] ? input.files[0].name : '点击选择或拖入文件';
+function setSeg(seg, value) {
+  seg.querySelectorAll('.seg-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.value === value);
   });
-  zone.addEventListener('dragover', (event) => {
-    event.preventDefault();
-    zone.classList.add('dragover');
+}
+
+function segValue(seg) {
+  const active = seg.querySelector('.seg-btn.active');
+  return active ? active.dataset.value : null;
+}
+
+function buildForm() {
+  SYMPTOMS.forEach((name) => {
+    const row = document.createElement('div');
+    row.className = 'symptom-row';
+    row.innerHTML = `
+      <span class="symptom-name">${name}</span>
+      <div class="seg seg-sm" data-symptom="${name}">
+        <button type="button" class="seg-btn active" data-value="0">无</button>
+        <button type="button" class="seg-btn" data-value="1">有</button>
+      </div>`;
+    els.symptomList.appendChild(row);
   });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', (event) => {
-    event.preventDefault();
-    zone.classList.remove('dragover');
-    if (event.dataTransfer.files.length) {
-      input.files = event.dataTransfer.files;
-      nameEl.textContent = input.files[0].name;
+
+  QUANT_LABS.forEach((name) => {
+    const label = document.createElement('label');
+    label.className = 'field lab-field';
+    label.innerHTML = `
+      <span class="field-label">${name}</span>
+      <input type="number" step="any" data-lab="${name}" placeholder="未测" />`;
+    els.labGrid.appendChild(label);
+  });
+
+  const qualLabel = document.createElement('label');
+  qualLabel.className = 'field lab-field';
+  qualLabel.innerHTML = `
+    <span class="field-label">肺炎支原体抗体 IgM</span>
+    <select id="qual-lab">
+      <option value="">未测</option>
+      <option value="阴性">阴性</option>
+      <option value="阳性">阳性</option>
+    </select>`;
+  els.labGrid.appendChild(qualLabel);
+}
+
+function collectPayload() {
+  const age = parseFloat(els.age.value);
+  if (!Number.isFinite(age) || age <= 0 || age > 150) {
+    throw new Error('请填写有效的年龄（1–150 岁）');
+  }
+  const gender = segValue(els.genderSeg);
+  if (!gender) {
+    throw new Error('请选择性别');
+  }
+
+  const symptoms = {};
+  els.symptomList.querySelectorAll('.seg').forEach((seg) => {
+    if (segValue(seg) === '1') symptoms[seg.dataset.symptom] = true;
+  });
+
+  const labs = {};
+  els.labGrid.querySelectorAll('input[data-lab]').forEach((input) => {
+    if (input.value.trim() !== '') {
+      const value = Number(input.value);
+      if (!Number.isFinite(value)) throw new Error(`检验项目 ${input.dataset.lab} 的结果必须是数值`);
+      labs[input.dataset.lab] = value;
     }
   });
+  const qual = document.getElementById('qual-lab').value;
+  if (qual) labs[QUAL_LAB] = qual;
+
+  return { age, gender, symptoms, labs };
 }
 
 function thresholdParam() {
@@ -71,17 +161,20 @@ async function parseResponse(resp) {
   return data;
 }
 
-async function runDemo() {
+async function submitForm(event) {
+  event.preventDefault();
   showError('');
   setBusy(true);
   try {
+    const payload = collectPayload();
     const threshold = thresholdParam();
-    const resp = await fetch(`/api/predict/demo?threshold=${threshold}`, { method: 'POST' });
+    const resp = await fetch(`/api/predict/form?threshold=${threshold}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
     const data = await parseResponse(resp);
-    renderPreview(els.symptomsPreview, data.symptoms_preview);
-    renderPreview(els.labsPreview, data.labs_preview);
-    els.previewSection.hidden = false;
-    renderResults(data.patients);
+    renderResult(data.patients[0]);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -89,118 +182,74 @@ async function runDemo() {
   }
 }
 
-async function runAnalyze() {
-  showError('');
-  if (!els.symptomFile.files[0] || !els.labFile.files[0]) {
-    showError('请先选择症状长表和检验长表两个 CSV 文件');
-    return;
-  }
-  setBusy(true);
-  try {
-    const threshold = thresholdParam();
-    const form = new FormData();
-    form.append('symptom_file', els.symptomFile.files[0]);
-    form.append('lab_file', els.labFile.files[0]);
-    const resp = await fetch(`/api/predict?threshold=${threshold}`, { method: 'POST', body: form });
-    const data = await parseResponse(resp);
-    els.previewSection.hidden = true;
-    renderResults(data.patients);
-  } catch (err) {
-    showError(err.message);
-  } finally {
-    setBusy(false);
-  }
-}
-
-function renderPreview(table, preview) {
-  const head = preview.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join('');
-  const body = preview.rows
-    .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell ?? '')}</td>`).join('')}</tr>`)
-    .join('');
-  table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body}</tbody>`;
-}
-
-function renderResults(patients) {
-  if (!patients.length) {
-    showError('未识别到有效患者记录');
-    return;
-  }
-  lastPatients = patients.slice();
-  sortAndRenderRows();
-  els.resultsSection.hidden = false;
-  els.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function sortAndRenderRows() {
-  const rows = lastPatients.slice().sort((a, b) => (sortAsc ? a.score - b.score : b.score - a.score));
-  els.scoreSort.textContent = sortAsc ? '得分 ↑' : '得分 ↓';
-  els.resultsBody.innerHTML = '';
-  rows.forEach((patient) => {
-    const tr = document.createElement('tr');
-    const badge = patient.label
-      ? `<span class="badge ${patient.label === '肺炎' ? 'badge-danger' : 'badge-ok'}">${escapeHtml(patient.label)}</span>`
-      : '<span class="badge badge-muted">未分类</span>';
-    tr.innerHTML = `<td>${escapeHtml(patient.patient_id)}</td><td class="score">${patient.score.toFixed(4)}</td><td>${badge}</td>`;
-    tr.addEventListener('click', () => openDrawer(patient));
-    els.resultsBody.appendChild(tr);
-  });
-}
-
-function openDrawer(patient) {
+function renderResult(patient) {
   const d = patient.detail;
+  const badge = patient.label
+    ? `<span class="badge ${patient.label === '肺炎' ? 'badge-danger' : 'badge-ok'}">${escapeHtml(patient.label)}</span>`
+    : '';
   const symptoms = d.symptoms_positive.length
     ? d.symptoms_positive.map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('')
-    : '<span class="muted">无阳性症状记录</span>';
-  const labRows = d.labs
-    .map((lab) => {
-      const state = lab.measured ? '' : ' class="muted-row"';
-      const value = lab.measured ? formatNum(lab.value) : '未测量';
-      const normalized = lab.measured ? formatNum(lab.normalized) : '—';
-      let positive = '—';
-      if (lab.positive === true) positive = '<span class="badge badge-danger">阳性</span>';
-      if (lab.positive === false) positive = '<span class="badge badge-ok">阴性</span>';
-      return `<tr${state}><td>${escapeHtml(lab.name)}</td><td>${value}</td><td>${normalized}</td><td>${positive}</td></tr>`;
-    })
-    .join('');
-  els.drawerContent.innerHTML = `
-    <h2>${escapeHtml(patient.patient_id)}</h2>
-    <p class="drawer-score">得分 <strong>${patient.score.toFixed(4)}</strong>${patient.label ? ` · ${escapeHtml(patient.label)}` : ''}</p>
-    <p>年龄：${d.age ?? '未知'} · 性别：${d.gender ?? '未知'}</p>
+    : '<span class="muted">无阳性症状</span>';
+  const measuredLabs = d.labs.filter((lab) => lab.measured);
+  const labRows = measuredLabs.length
+    ? measuredLabs.map((lab) => {
+        const result = lab.positive !== null
+          ? (lab.positive ? '<span class="badge badge-danger">阳性</span>' : '<span class="badge badge-ok">阴性</span>')
+          : formatNum(lab.value);
+        return `<tr><td>${escapeHtml(lab.name)}</td><td>${result}</td></tr>`;
+      }).join('')
+    : '<tr><td colspan="2" class="muted">未填写检验项目</td></tr>';
+
+  els.resultContent.innerHTML = `
+    <div class="score-panel">
+      <div class="score-number">${patient.score.toFixed(4)}</div>
+      <div class="score-side">
+        ${badge}
+        <p class="muted">年龄 ${d.age ?? '未知'} · ${d.gender ?? '未知'} · 阈值 ${els.threshold.value}</p>
+      </div>
+    </div>
     <h3>阳性症状</h3>
     <div class="chips">${symptoms}</div>
-    <h3>检验项目</h3>
+    <h3>检验结果</h3>
     <div class="table-scroll">
       <table class="labs-table">
-        <thead><tr><th>项目</th><th>结果值</th><th>归一化</th><th>定性</th></tr></thead>
+        <thead><tr><th>项目</th><th>结果</th></tr></thead>
         <tbody>${labRows}</tbody>
       </table>
     </div>`;
-  els.drawer.hidden = false;
+  els.resultSection.hidden = false;
+  els.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function exportCsv() {
-  const header = 'patient_id,pneumonia_score,predicted_class';
-  const lines = lastPatients.map(
-    (p) => [csvEscape(p.patient_id), csvEscape(p.score), csvEscape(p.label ?? '')].join(',')
-  );
-  const blob = new Blob(['﻿' + [header, ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'predictions.csv';
-  link.click();
-  URL.revokeObjectURL(link.href);
+function fillDemo(demo) {
+  resetForm();
+  els.age.value = demo.age;
+  setSeg(els.genderSeg, demo.gender);
+  els.symptomList.querySelectorAll('.seg').forEach((seg) => {
+    setSeg(seg, demo.symptoms.includes(seg.dataset.symptom) ? '1' : '0');
+  });
+  els.labGrid.querySelectorAll('input[data-lab]').forEach((input) => {
+    if (demo.labs[input.dataset.lab] !== undefined) input.value = demo.labs[input.dataset.lab];
+  });
+  document.getElementById('qual-lab').value = demo.qualLab;
+  showError('示例已填入，点击「提交评分」查看结果');
+  els.errorBox.classList.add('info-box');
+}
+
+function resetForm() {
+  els.errorBox.classList.remove('info-box');
+  showError('');
+  els.age.value = '';
+  setSeg(els.genderSeg, null);
+  els.symptomList.querySelectorAll('.seg').forEach((seg) => setSeg(seg, '0'));
+  els.labGrid.querySelectorAll('input[data-lab]').forEach((input) => { input.value = ''; });
+  document.getElementById('qual-lab').value = '';
+  els.resultSection.hidden = true;
 }
 
 function formatNum(value) {
   if (value === null || value === undefined) return '—';
   return Number.isFinite(value) ? Math.round(value * 10000) / 10000 : '—';
-}
-
-function csvEscape(value) {
-  let text = String(value ?? '');
-  if (/^[=+\-@]/.test(text)) text = `'${text}`;
-  if (/[",\n\r]/.test(text)) text = `"${text.replace(/"/g, '""')}"`;
-  return text;
 }
 
 function escapeHtml(value) {
@@ -209,13 +258,14 @@ function escapeHtml(value) {
   ));
 }
 
-setupDropzone('symptom-zone', els.symptomFile, els.symptomName);
-setupDropzone('lab-zone', els.labFile, els.labName);
-els.demoBtn.addEventListener('click', runDemo);
-els.analyzeBtn.addEventListener('click', runAnalyze);
-els.exportBtn.addEventListener('click', exportCsv);
-els.scoreSort.addEventListener('click', () => { sortAsc = !sortAsc; sortAndRenderRows(); });
-els.drawerClose.addEventListener('click', () => { els.drawer.hidden = true; });
-els.drawer.addEventListener('click', (event) => { if (event.target === els.drawer) els.drawer.hidden = true; });
+buildForm();
 
-if (new URLSearchParams(location.search).has('demo')) runDemo();
+document.addEventListener('click', (event) => {
+  const btn = event.target.closest('.seg-btn');
+  if (btn) setSeg(btn.parentElement, btn.dataset.value);
+});
+
+els.form.addEventListener('submit', submitForm);
+els.demoFy.addEventListener('click', () => fillDemo(DEMO_FY13));
+els.demoSg.addEventListener('click', () => fillDemo(DEMO_SG106));
+els.resetBtn.addEventListener('click', resetForm);
