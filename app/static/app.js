@@ -121,6 +121,10 @@ function renderPreview(table, preview) {
 }
 
 function renderResults(patients) {
+  if (!patients.length) {
+    showError('未识别到有效患者记录');
+    return;
+  }
   lastPatients = patients.slice();
   sortAndRenderRows();
   els.resultsSection.hidden = false;
@@ -134,7 +138,7 @@ function sortAndRenderRows() {
   rows.forEach((patient) => {
     const tr = document.createElement('tr');
     const badge = patient.label
-      ? `<span class="badge ${patient.label === '肺炎' ? 'badge-danger' : 'badge-ok'}">${patient.label}</span>`
+      ? `<span class="badge ${patient.label === '肺炎' ? 'badge-danger' : 'badge-ok'}">${escapeHtml(patient.label)}</span>`
       : '<span class="badge badge-muted">未分类</span>';
     tr.innerHTML = `<td>${escapeHtml(patient.patient_id)}</td><td class="score">${patient.score.toFixed(4)}</td><td>${badge}</td>`;
     tr.addEventListener('click', () => openDrawer(patient));
@@ -160,7 +164,7 @@ function openDrawer(patient) {
     .join('');
   els.drawerContent.innerHTML = `
     <h2>${escapeHtml(patient.patient_id)}</h2>
-    <p class="drawer-score">得分 <strong>${patient.score.toFixed(4)}</strong>${patient.label ? ` · ${patient.label}` : ''}</p>
+    <p class="drawer-score">得分 <strong>${patient.score.toFixed(4)}</strong>${patient.label ? ` · ${escapeHtml(patient.label)}` : ''}</p>
     <p>年龄：${d.age ?? '未知'} · 性别：${d.gender ?? '未知'}</p>
     <h3>阳性症状</h3>
     <div class="chips">${symptoms}</div>
@@ -176,7 +180,9 @@ function openDrawer(patient) {
 
 function exportCsv() {
   const header = 'patient_id,pneumonia_score,predicted_class';
-  const lines = lastPatients.map((p) => `${p.patient_id},${p.score},${p.label ?? ''}`);
+  const lines = lastPatients.map(
+    (p) => [csvEscape(p.patient_id), csvEscape(p.score), csvEscape(p.label ?? '')].join(',')
+  );
   const blob = new Blob(['﻿' + [header, ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -188,6 +194,13 @@ function exportCsv() {
 function formatNum(value) {
   if (value === null || value === undefined) return '—';
   return Number.isFinite(value) ? Math.round(value * 10000) / 10000 : '—';
+}
+
+function csvEscape(value) {
+  let text = String(value ?? '');
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  if (/[",\n\r]/.test(text)) text = `"${text.replace(/"/g, '""')}"`;
+  return text;
 }
 
 function escapeHtml(value) {
