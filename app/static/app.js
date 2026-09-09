@@ -4,10 +4,8 @@ const SYMPTOMS = [
 ];
 
 const QUANT_LABS = [
-  'C反应蛋白', '红细胞比容', '淋巴细胞计数', '单核细胞计数',
-  '单核细胞/淋巴细胞比值', '中性粒细胞计数', '中性粒细胞/淋巴细胞比值',
-  '血小板计数', '血小板分布宽度', '血小板/淋巴细胞比值',
-  '淀粉样蛋白A', '系统性免疫炎症指数', '系统性炎症反应指数', '白细胞计数',
+  '白细胞计数', '中性粒细胞计数', '淋巴细胞计数', '单核细胞计数',
+  '血小板计数', '血小板分布宽度', '红细胞比容', 'C反应蛋白', '淀粉样蛋白A',
 ];
 const QUAL_LAB = '肺炎支原体抗体.IgM';
 
@@ -19,28 +17,8 @@ const DEMO_FY13 = {
     '白细胞计数': 6.93, '红细胞比容': 35.4, '淋巴细胞计数': 1.3,
     '单核细胞计数': 0.43, '中性粒细胞计数': 5.06, '血小板分布宽度': 10.8,
     '血小板计数': 137, '淀粉样蛋白A': 11.273, 'C反应蛋白': 2.2,
-    '中性粒细胞/淋巴细胞比值': 3.89230769230769,
-    '单核细胞/淋巴细胞比值': 0.330769230769231,
-    '血小板/淋巴细胞比值': 105.384615384615,
-    '系统性免疫炎症指数': 533.246153846154,
-    '系统性炎症反应指数': 1.67369230769231,
   },
   qualLab: '',
-};
-
-const DEMO_SG106 = {
-  age: 68,
-  gender: '男',
-  symptoms: [],
-  labs: {
-    '白细胞计数': 11.46, '红细胞比容': 38.2, '淋巴细胞计数': 2.5,
-    '单核细胞计数': 0.56, '中性粒细胞计数': 8.19, '血小板分布宽度': 16.8,
-    '血小板计数': 215, '淀粉样蛋白A': 38.333, 'C反应蛋白': 14.0,
-    '中性粒细胞/淋巴细胞比值': 3.276, '单核细胞/淋巴细胞比值': 0.224,
-    '血小板/淋巴细胞比值': 86, '系统性免疫炎症指数': 704.34,
-    '系统性炎症反应指数': 1.83456,
-  },
-  qualLab: '阴性',
 };
 
 const els = {
@@ -52,7 +30,6 @@ const els = {
   threshold: document.getElementById('threshold'),
   submitBtn: document.getElementById('submit-btn'),
   demoFy: document.getElementById('demo-fy'),
-  demoSg: document.getElementById('demo-sg'),
   resetBtn: document.getElementById('reset-btn'),
   errorBox: document.getElementById('error-box'),
   resultSection: document.getElementById('result-section'),
@@ -267,5 +244,4 @@ document.addEventListener('click', (event) => {
 
 els.form.addEventListener('submit', submitForm);
 els.demoFy.addEventListener('click', () => fillDemo(DEMO_FY13));
-els.demoSg.addEventListener('click', () => fillDemo(DEMO_SG106));
 els.resetBtn.addEventListener('click', resetForm);

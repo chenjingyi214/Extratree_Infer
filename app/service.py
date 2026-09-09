@@ -22,6 +22,16 @@ LAB_EN_TO_ZH = {en: zh for zh, en in preprocessing.LAB_NAME_MAP.items()}
 FORM_PATIENT_ID = "FORM-1"
 QUALITATIVE_LAB = "肺炎支原体抗体.IgM"
 
+# 派生检验项：不在表单中填写，由基础计数自动计算（公式与训练数据一致，
+# 已用两位示例患者的原始记录逐项验证）。
+DERIVED_LABS = {
+    "单核细胞/淋巴细胞比值": lambda c: c["单核细胞计数"] / c["淋巴细胞计数"],
+    "中性粒细胞/淋巴细胞比值": lambda c: c["中性粒细胞计数"] / c["淋巴细胞计数"],
+    "血小板/淋巴细胞比值": lambda c: c["血小板计数"] / c["淋巴细胞计数"],
+    "系统性免疫炎症指数": lambda c: c["血小板计数"] * c["中性粒细胞计数"] / c["淋巴细胞计数"],
+    "系统性炎症反应指数": lambda c: c["中性粒细胞计数"] * c["单核细胞计数"] / c["淋巴细胞计数"],
+}
+
 _MODEL: Any = None
 _FEATURE_NAMES: list[str] | None = None
 
@@ -150,6 +160,29 @@ def build_form_tables(payload: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     if unknown_labs:
         raise ValueError(f"未登记的检验项目: {unknown_labs}")
 
+    parsed_labs: dict[str, Any] = {}
+    for name, value in labs.items():
+        if name == QUALITATIVE_LAB:
+            if value not in {"阳性", "阴性"}:
+                raise ValueError(f"{QUALITATIVE_LAB} 只能填 阳性/阴性")
+            parsed_labs[name] = value
+        else:
+            try:
+                parsed_labs[name] = float(value)
+            except (TypeError, ValueError):
+                raise ValueError(f"检验项目 {name} 的结果必须是数值") from None
+
+    # 三个比值与两个指数不由用户填写，从基础计数派生；淋巴细胞计数缺失或为 0
+    # 时无法派生，对应项按未测量处理（交由模型内置填补）。
+    lymphocyte = parsed_labs.get("淋巴细胞计数")
+    if lymphocyte:
+        for name, formula in DERIVED_LABS.items():
+            if name not in parsed_labs:
+                try:
+                    parsed_labs[name] = formula(parsed_labs)
+                except KeyError:
+                    pass
+
     symptom_table = pd.DataFrame(
         [
             {
@@ -164,7 +197,7 @@ def build_form_tables(payload: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     )
 
     lab_rows = []
-    for name, value in labs.items():
+    for name, value in parsed_labs.items():
         row = {
             "patientId": FORM_PATIENT_ID,
             "gender": gender,
@@ -179,18 +212,12 @@ def build_form_tables(payload: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
             "standardResultType": "",
         }
         if name == QUALITATIVE_LAB:
-            if value not in {"阳性", "阴性"}:
-                raise ValueError(f"{QUALITATIVE_LAB} 只能填 阳性/阴性")
             row["standardResult"] = value
             row["standardResultNorm"] = value
             row["standardResultType"] = "QUALITATIVE"
         else:
-            try:
-                number = float(value)
-            except (TypeError, ValueError):
-                raise ValueError(f"检验项目 {name} 的结果必须是数值") from None
-            row["standardResult"] = number
-            row["standardResultNorm"] = number
+            row["standardResult"] = value
+            row["standardResultNorm"] = value
             row["standardResultType"] = "QUANTIFY"
         lab_rows.append(row)
 

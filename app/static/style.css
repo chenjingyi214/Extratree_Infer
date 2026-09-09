@@ -82,6 +82,7 @@ input:focus, select:focus { outline: 2px solid #99f6e4; border-color: var(--prim
 .lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem 1rem; }
 @media (max-width: 560px) { .lab-grid { grid-template-columns: 1fr; } }
 .lab-field .field-label { color: var(--muted); }
+.hint { color: var(--muted); font-size: 0.82rem; margin: -0.4rem 0 0.9rem; }
 
 .controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .threshold-field { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.9rem; }

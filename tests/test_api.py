@@ -18,11 +18,6 @@ EXAMPLE_FY13 = {
         "白细胞计数": 6.93, "红细胞比容": 35.4, "淋巴细胞计数": 1.3,
         "单核细胞计数": 0.43, "中性粒细胞计数": 5.06, "血小板分布宽度": 10.8,
         "血小板计数": 137, "淀粉样蛋白A": 11.273, "C反应蛋白": 2.2,
-        "中性粒细胞/淋巴细胞比值": 3.89230769230769,
-        "单核细胞/淋巴细胞比值": 0.330769230769231,
-        "血小板/淋巴细胞比值": 105.384615384615,
-        "系统性免疫炎症指数": 533.246153846154,
-        "系统性炎症反应指数": 1.67369230769231,
     },
 }
 
@@ -34,9 +29,7 @@ EXAMPLE_SG106 = {
         "白细胞计数": 11.46, "红细胞比容": 38.2, "淋巴细胞计数": 2.5,
         "单核细胞计数": 0.56, "中性粒细胞计数": 8.19, "血小板分布宽度": 16.8,
         "血小板计数": 215, "淀粉样蛋白A": 38.333, "C反应蛋白": 14.0,
-        "中性粒细胞/淋巴细胞比值": 3.276, "单核细胞/淋巴细胞比值": 0.224,
-        "血小板/淋巴细胞比值": 86, "系统性免疫炎症指数": 704.34,
-        "系统性炎症反应指数": 1.83456, "肺炎支原体抗体.IgM": "阴性",
+        "肺炎支原体抗体.IgM": "阴性",
     },
 }
 
@@ -85,6 +78,26 @@ def test_form_without_threshold_has_null_label():
     resp = client.post("/api/predict/form", json={"age": 50, "gender": "男"})
     assert resp.status_code == 200
     assert _single(resp.json())["label"] is None
+
+
+def test_form_derives_ratios_and_indices_from_counts():
+    resp = client.post("/api/predict/form", json=EXAMPLE_FY13, params={"threshold": 0.16})
+    assert resp.status_code == 200
+    labs = {lab["name"]: lab for lab in _single(resp.json())["detail"]["labs"]}
+    assert labs["单核细胞/淋巴细胞比值"]["value"] == pytest.approx(0.43 / 1.3)
+    assert labs["中性粒细胞/淋巴细胞比值"]["value"] == pytest.approx(5.06 / 1.3)
+    assert labs["血小板/淋巴细胞比值"]["value"] == pytest.approx(137 / 1.3)
+    assert labs["系统性免疫炎症指数"]["value"] == pytest.approx(137 * 5.06 / 1.3)
+    assert labs["系统性炎症反应指数"]["value"] == pytest.approx(5.06 * 0.43 / 1.3)
+
+
+def test_form_derived_labs_unmeasured_without_lymphocyte_count():
+    payload = {"age": 50, "gender": "男", "labs": {"白细胞计数": 8.0, "淋巴细胞计数": 0}}
+    resp = client.post("/api/predict/form", json=payload, params={"threshold": 0.16})
+    assert resp.status_code == 200
+    labs = {lab["name"]: lab for lab in _single(resp.json())["detail"]["labs"]}
+    assert labs["中性粒细胞/淋巴细胞比值"]["measured"] is False
+    assert labs["系统性免疫炎症指数"]["measured"] is False
 
 
 @pytest.mark.parametrize(
