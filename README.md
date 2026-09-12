@@ -38,7 +38,9 @@ UV_HTTP_TIMEOUT=180 uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/uvicorn app.main:app --port 8000
 ```
 
-浏览器打开 **http://127.0.0.1:8000**，在问卷表单中填写患者信息并提交：
+浏览器打开 **http://127.0.0.1:8000**，在问卷表单中填写患者信息并提交
+（页面默认英文，点击右上角「中文 / EN」按钮切换语言，也可用 `?lang=zh` 或
+`?lang=en` 直接指定）：
 
 - **必填**：年龄、性别
 - **选填**：13 项症状（默认"无"）、10 项检验（没测留空即可，由模型内置规则填补）；

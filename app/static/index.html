@@ -1,67 +1,68 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>社区获得性肺炎辅助评分 · ExtraTrees 推理</title>
+  <title>CAP Auxiliary Score · ExtraTrees Inference</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="site-header">
-    <h1>社区获得性肺炎辅助评分</h1>
-    <p class="subtitle">基于冻结 ExtraTrees 模型预测急性上呼吸道感染（感冒）继发社区获得性肺炎（肺炎）· 结果仅供研究参考，非诊断结论</p>
+    <button id="lang-toggle" class="btn btn-ghost lang-toggle" type="button">中文</button>
+    <h1 data-i18n="title">Community-Acquired Pneumonia Auxiliary Score</h1>
+    <p class="subtitle" data-i18n="subtitle">Frozen ExtraTrees model predicting secondary community-acquired pneumonia (pneumonia) following acute upper respiratory infection (common cold) · For research reference only, not a diagnosis</p>
   </header>
 
   <main>
     <form class="card" id="patient-form" novalidate>
       <section class="form-section">
-        <h2>1. 基本信息 <span class="tag tag-required">必填</span></h2>
+        <h2 data-i18n-html="sec1">1. Basic Information <span class="tag tag-required">Required</span></h2>
         <div class="basic-grid">
           <label class="field">
-            <span class="field-label">年龄 <i class="req">*</i></span>
-            <input type="number" id="age" min="1" max="150" step="1" placeholder="岁" />
+            <span class="field-label" data-i18n-html="age">Age <i class="req">*</i></span>
+            <input type="number" id="age" min="1" max="150" step="1" placeholder="years" />
           </label>
           <fieldset class="field">
-            <span class="field-label">性别 <i class="req">*</i></span>
+            <span class="field-label" data-i18n-html="gender">Sex <i class="req">*</i></span>
             <div class="seg" id="gender-seg">
-              <button type="button" class="seg-btn" data-value="男">男</button>
-              <button type="button" class="seg-btn" data-value="女">女</button>
+              <button type="button" class="seg-btn" data-value="男">Male</button>
+              <button type="button" class="seg-btn" data-value="女">Female</button>
             </div>
           </fieldset>
         </div>
       </section>
 
       <section class="form-section">
-        <h2>2. 症状与体征 <span class="tag tag-optional">选填 · 默认为「无」</span></h2>
+        <h2 data-i18n-html="sec2">2. Signs &amp; Symptoms <span class="tag tag-optional">Optional · defaults to "No"</span></h2>
         <div class="symptom-list" id="symptom-list"></div>
       </section>
 
       <section class="form-section">
-        <h2>3. 检验项目 <span class="tag tag-optional">选填 · 没测的项目留空即可</span></h2>
-        <p class="hint">三个比值（单核/淋巴、中性粒/淋巴、血小板/淋巴）与两个指数（系统性免疫炎症指数、系统性炎症反应指数）由计数自动计算，无需填写。</p>
+        <h2 data-i18n-html="sec3">3. Laboratory Tests <span class="tag tag-optional">Optional · leave blank if not tested</span></h2>
+        <p class="hint" data-i18n="derivedHint">The three ratios (MLR, NLR, PLR) and two indices (SII, SIRI) are computed automatically from the cell counts — no need to fill them in.</p>
         <div class="lab-grid" id="lab-grid"></div>
       </section>
 
       <div class="controls">
         <label class="threshold-field">
-          分类阈值
+          <span data-i18n="threshold">Threshold</span>
           <input type="number" id="threshold" min="0" max="1" step="0.01" value="0.16" />
         </label>
-        <button type="submit" class="btn btn-primary" id="submit-btn">提交评分</button>
-        <button type="button" class="btn btn-ghost" id="demo-fy">示例·肺炎患者</button>
-        <button type="button" class="btn btn-ghost" id="reset-btn">清空</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn" data-i18n="submit">Score</button>
+        <button type="button" class="btn btn-ghost" id="demo-fy" data-i18n="demoFy">Example · Pneumonia</button>
+        <button type="button" class="btn btn-ghost" id="reset-btn" data-i18n="reset">Clear</button>
       </div>
       <p id="error-box" class="error-box" hidden></p>
     </form>
 
     <section class="card" id="result-section" hidden>
-      <h2>评分结果</h2>
+      <h2 data-i18n="resultTitle">Result</h2>
       <div id="result-content"></div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    模型得分为未经校准的输出分数，不能解释为患病概率，也不能替代医生诊断。
+  <footer class="site-footer" data-i18n="footer">
+    The score is an uncalibrated model output. It is not a probability of disease and cannot replace professional medical diagnosis.
   </footer>
 
   <script src="/app.js"></script>
