@@ -44,7 +44,7 @@ const I18N = {
     symptoms: {
       '乏力': 'Fatigue', '低热': 'Slight fever', '呼吸困难': 'Dyspnea',
       '咳嗽': 'Cough', '咳痰': 'Sputum', '喷嚏': 'Sneeze',
-      '头晕/疼': 'DizzinessHeadache', '憋气': 'Chest tightness',
+      '头晕/疼': 'Dizziness Headache', '憋气': 'Chest tightness',
       '气短': 'Shortness of breath', '流涕': 'Rhinorrhea', '胸痛': 'Thoracalgia',
       '鼻塞': 'Nasal obstruction', '意识模糊/嗜睡': 'Clouding of consciousness/somnolence',
     },

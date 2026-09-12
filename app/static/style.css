@@ -14,6 +14,8 @@
 
 * { box-sizing: border-box; }
 
+html { overflow-y: scroll; }
+
 body {
   margin: 0;
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
@@ -23,8 +25,8 @@ body {
 
 .site-header { padding: 2.5rem 1.5rem 1rem; text-align: center; position: relative; }
 .site-header h1 { margin: 0; font-size: 1.75rem; color: var(--primary-dark); }
-.subtitle { color: var(--muted); margin: 0.5rem 0 0; }
-.lang-toggle { position: absolute; top: 1rem; right: 1rem; font-size: 0.85rem; padding: 0.35rem 0; width: 4.5rem; text-align: center; }
+.subtitle { color: var(--muted); margin: 0.5rem 0 0; min-height: 2.4em; line-height: 1.2; }
+.site-header .lang-toggle { position: absolute; top: 1rem; right: 1rem; font-size: 0.85rem; padding: 0.35rem 0; width: 4.5rem; text-align: center; }
 
 main { max-width: 720px; margin: 0 auto; padding: 1rem 1.5rem 3rem; display: grid; gap: 1.5rem; }
 main > * { min-width: 0; }
@@ -65,11 +67,11 @@ input:focus, select:focus { outline: 2px solid #99f6e4; border-color: var(--prim
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; }
 .seg-btn {
   border: none; background: #fff; color: var(--muted);
-  padding: 0.5rem 1.4rem; font-size: 0.9rem; cursor: pointer;
+  padding: 0.5rem 0; width: 4rem; text-align: center; font-size: 0.9rem; cursor: pointer;
 }
 .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
 .seg-btn.active { background: var(--primary); color: #fff; }
-.seg-sm .seg-btn { padding: 0.3rem 1rem; font-size: 0.85rem; }
+.seg-sm .seg-btn { padding: 0.3rem 0; width: 3.2rem; font-size: 0.85rem; }
 
 .symptom-list { display: grid; gap: 0.15rem; }
 .symptom-row {
@@ -89,12 +91,13 @@ input:focus, select:focus { outline: 2px solid #99f6e4; border-color: var(--prim
 .threshold-field { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.9rem; }
 .threshold-field input { width: 5rem; }
 
-.btn { border-radius: 8px; padding: 0.55rem 1.2rem; font-size: 0.95rem; cursor: pointer; border: 1px solid transparent; }
+.btn { border-radius: 8px; padding: 0.55rem 0; width: 7rem; text-align: center; font-size: 0.95rem; cursor: pointer; border: 1px solid transparent; }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); }
 .btn-primary:disabled { opacity: 0.6; cursor: wait; }
 .btn-ghost { background: #fff; border-color: var(--border); color: var(--primary-dark); }
 .btn-ghost:hover { border-color: var(--primary); }
+#demo-fy { width: 11.5rem; }
 
 .error-box { margin: 1rem 0 0; padding: 0.75rem 1rem; background: var(--danger-bg); color: var(--danger); border-radius: 8px; font-size: 0.9rem; }
 .info-box { background: var(--ok-bg); color: var(--ok); }
