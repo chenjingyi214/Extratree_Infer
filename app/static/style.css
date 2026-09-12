@@ -19,6 +19,7 @@ html { overflow-y: scroll; }
 body {
   margin: 0;
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  line-height: 1.3;
   background: var(--bg);
   color: var(--text);
 }
@@ -52,6 +53,7 @@ main > * { min-width: 0; }
 
 input, select {
   font: inherit;
+  line-height: 1.3;
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -67,7 +69,7 @@ input:focus, select:focus { outline: 2px solid #99f6e4; border-color: var(--prim
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; }
 .seg-btn {
   border: none; background: #fff; color: var(--muted);
-  padding: 0.5rem 0; width: 4rem; text-align: center; font-size: 0.9rem; cursor: pointer;
+  padding: 0.5rem 0; width: 4rem; text-align: center; font-size: 0.9rem; line-height: 1.3; white-space: nowrap; cursor: pointer;
 }
 .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
 .seg-btn.active { background: var(--primary); color: #fff; }
@@ -91,7 +93,7 @@ input:focus, select:focus { outline: 2px solid #99f6e4; border-color: var(--prim
 .threshold-field { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.9rem; }
 .threshold-field input { width: 5rem; }
 
-.btn { border-radius: 8px; padding: 0.55rem 0; width: 7rem; text-align: center; font-size: 0.95rem; cursor: pointer; border: 1px solid transparent; }
+.btn { border-radius: 8px; padding: 0.55rem 0; width: 7rem; text-align: center; font-size: 0.95rem; line-height: 1.3; white-space: nowrap; cursor: pointer; border: 1px solid transparent; }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); }
 .btn-primary:disabled { opacity: 0.6; cursor: wait; }
