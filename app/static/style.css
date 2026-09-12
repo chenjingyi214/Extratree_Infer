@@ -24,7 +24,7 @@ body {
 .site-header { padding: 2.5rem 1.5rem 1rem; text-align: center; position: relative; }
 .site-header h1 { margin: 0; font-size: 1.75rem; color: var(--primary-dark); }
 .subtitle { color: var(--muted); margin: 0.5rem 0 0; }
-.lang-toggle { position: absolute; top: 1rem; right: 1rem; font-size: 0.85rem; padding: 0.35rem 0.9rem; }
+.lang-toggle { position: absolute; top: 1rem; right: 1rem; font-size: 0.85rem; padding: 0.35rem 0; width: 4.5rem; text-align: center; }
 
 main { max-width: 720px; margin: 0 auto; padding: 1rem 1.5rem 3rem; display: grid; gap: 1.5rem; }
 main > * { min-width: 0; }
